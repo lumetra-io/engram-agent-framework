@@ -1,4 +1,4 @@
-"""Minimal end-to-end example using EngramSkill with a ChatAgent.
+"""Minimal end-to-end example using EngramTools with a ChatAgent.
 
 Requires:
     pip install agent-framework agent-framework-engram
@@ -13,11 +13,11 @@ import asyncio
 from agent_framework import Agent
 from agent_framework.openai import OpenAIChatClient
 
-from agent_framework_engram import EngramSkill
+from agent_framework_engram import EngramTools
 
 
 async def main() -> None:
-    skill = EngramSkill(bucket="agent-framework-demo")
+    memory = EngramTools(bucket="agent-framework-demo")
 
     agent = Agent(
         client=OpenAIChatClient(),
@@ -28,13 +28,13 @@ async def main() -> None:
             "questions about the user, and engram_store_memory whenever "
             "the user shares a new preference, plan, or identity detail."
         ),
-        tools=skill.tools,
+        tools=memory.tools,
     )
 
     print(await agent.run("Hi, I'm Jacob and I prefer concise replies."))
     print(await agent.run("What do you remember about me?"))
 
-    await skill.aclose()
+    await memory.aclose()
 
 
 if __name__ == "__main__":

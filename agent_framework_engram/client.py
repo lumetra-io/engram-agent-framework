@@ -75,7 +75,7 @@ class EngramClient:
         return {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
-            "User-Agent": "agent-framework-engram/0.1.0",
+            "User-Agent": "agent-framework-engram/0.1.1",
         }
 
     async def _request(

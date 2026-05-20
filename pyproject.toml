@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agent-framework-engram"
-version = "0.1.0"
+version = "0.1.1"
 description = "Engram (Lumetra) durable memory tools and middleware for the Microsoft Agent Framework."
 readme = "README.md"
 license = { text = "MIT" }

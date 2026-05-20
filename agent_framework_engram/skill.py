@@ -1,18 +1,26 @@
-"""Engram skill: bundle of ``@tool``-decorated functions for an Agent.
+"""Engram tools: bundle of ``@tool``-decorated functions for an Agent.
 
 This is the recommended extension point because it gives the model
 *first-class* tool access to memory operations — the LLM decides when to
 recall context and when to persist new facts, rather than the framework
 making that decision for it.
 
+.. note::
+
+    This module used to expose :class:`EngramSkill`. It has been renamed
+    to :class:`EngramTools` to avoid collision with Microsoft Agent
+    Framework's own ``Skill`` primitive (the SKILL.md domain-knowledge
+    package per the ``agentskills.io`` spec). The old name is still
+    importable as a deprecated alias.
+
 Example
 -------
 
 >>> from agent_framework import Agent
 >>> from agent_framework.openai import OpenAIChatClient
->>> from agent_framework_engram import EngramSkill
+>>> from agent_framework_engram import EngramTools
 >>>
->>> skill = EngramSkill(bucket="my-agent")  # picks up ENGRAM_API_KEY
+>>> tools = EngramTools(bucket="my-agent")  # picks up ENGRAM_API_KEY
 >>> agent = Agent(
 ...     client=OpenAIChatClient(),
 ...     name="assistant",
@@ -21,13 +29,14 @@ Example
 ...         "Call engram_query_memory before answering questions about the "
 ...         "user, and engram_store_memory whenever they share a new fact."
 ...     ),
-...     tools=skill.tools,
+...     tools=tools.tools,
 ... )
 """
 
 from __future__ import annotations
 
 import os
+import warnings
 from typing import Annotated, Any
 
 try:  # pragma: no cover - exercised only when agent-framework is installed
@@ -42,11 +51,11 @@ def _require_framework() -> None:
     if _af_tool is None:
         raise ImportError(
             "agent-framework is not installed. Install it with "
-            "`pip install agent-framework>=1.5` to use EngramSkill."
+            "`pip install agent-framework>=1.5` to use EngramTools."
         )
 
 
-class EngramSkill:
+class EngramTools:
     """A bundle of Engram memory tools, bound to a single bucket.
 
     Parameters
@@ -60,7 +69,7 @@ class EngramSkill:
         REST base URL override (defaults to ``https://api.lumetra.io``).
     client:
         Optional pre-constructed :class:`EngramClient` to share connection
-        pooling across skills.
+        pooling across tool bundles.
     include:
         Optional whitelist of tool names to expose. Defaults to all six.
         Useful if you want to expose recall but hide destructive ops.
@@ -270,6 +279,25 @@ def engram_tools(
     other framework integrations. Returns a plain list of tools you can
     splat into ``ChatAgent(tools=...)``.
     """
-    return EngramSkill(
+    return EngramTools(
         bucket, api_key=api_key, base_url=base_url, include=include
     ).tools
+
+
+class EngramSkill(EngramTools):
+    """Deprecated alias for :class:`EngramTools`.
+
+    Renamed to avoid collision with Microsoft Agent Framework's own
+    ``Skill`` primitive (SKILL.md domain-knowledge bundles). Will be
+    removed in a future release.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            "EngramSkill is deprecated and will be removed in a future "
+            "release; use EngramTools instead. The rename avoids collision "
+            "with Microsoft Agent Framework's Skill (SKILL.md) primitive.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)

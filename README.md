@@ -6,10 +6,12 @@ Ships two extension points so you can pick whichever fits your architecture:
 
 | Extension point   | Class             | What it does                                                                                        |
 | ----------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
-| **Skill (tools)** | `EngramSkill`     | Exposes `engram_store_memory`, `engram_query_memory`, etc. as first-class `@ai_function` tools.     |
+| **Tools**         | `EngramTools`     | Exposes `engram_store_memory`, `engram_query_memory`, etc. as first-class `@ai_function` tools.     |
 | **Middleware**    | `EngramMiddleware`| Transparently recalls relevant memories before each turn and auto-stores the user message after.    |
 
-The Skill path is recommended — it lets the model itself decide when to recall and persist, which is the strength of Agent Framework's function-tool loop.
+The tools path is recommended — it lets the model itself decide when to recall and persist, which is the strength of Agent Framework's function-tool loop.
+
+> **Heads up:** the tools class used to be named `EngramSkill`. It was renamed to `EngramTools` to avoid colliding with Microsoft Agent Framework's own `Skill` primitive (SKILL.md domain-knowledge bundles per the [`agentskills.io`](https://agentskills.io) spec). `EngramSkill` is kept as a deprecated alias and will emit a `DeprecationWarning` on use; please migrate to `EngramTools`.
 
 ## Install
 
@@ -25,17 +27,17 @@ Get an Engram API key at <https://lumetra.io>. Export it:
 export ENGRAM_API_KEY=eng_live_...
 ```
 
-## Quick start — Skill (recommended)
+## Quick start — Tools (recommended)
 
 ```python
 import asyncio
 from agent_framework import Agent
 from agent_framework.openai import OpenAIChatClient
-from agent_framework_engram import EngramSkill
+from agent_framework_engram import EngramTools
 
 
 async def main() -> None:
-    skill = EngramSkill(bucket="my-agent")  # ENGRAM_API_KEY from env
+    memory = EngramTools(bucket="my-agent")  # ENGRAM_API_KEY from env
 
     agent = Agent(
         client=OpenAIChatClient(),
@@ -46,7 +48,7 @@ async def main() -> None:
             "about the user, and engram_store_memory whenever the user "
             "shares a new preference or fact."
         ),
-        tools=skill.tools,
+        tools=memory.tools,
     )
 
     print(await agent.run("Remember that I prefer dark mode and metric units."))
@@ -90,7 +92,7 @@ asyncio.run(main())
 
 For multi-tenant deployments, use one bucket per user (e.g. `f"user-{user_id}"`).
 
-## Tools exposed by `EngramSkill`
+## Tools exposed by `EngramTools`
 
 | Tool                    | Maps to                                                |
 | ----------------------- | ------------------------------------------------------ |
@@ -101,12 +103,26 @@ For multi-tenant deployments, use one bucket per user (e.g. `f"user-{user_id}"`)
 | `engram_clear_bucket`   | `DELETE /v1/buckets/{bucket}/memories`                 |
 | `engram_list_buckets`   | `GET  /v1/buckets`                                     |
 
-Restrict with `EngramSkill(bucket=..., include=("store_memory", "query_memory"))` if you only want recall/persist (no destructive ops).
+Restrict with `EngramTools(bucket=..., include=("store_memory", "query_memory"))` if you only want recall/persist (no destructive ops).
+
+## Migrating from `EngramSkill`
+
+```python
+# Before (still works, emits DeprecationWarning):
+from agent_framework_engram import EngramSkill
+skill = EngramSkill(bucket="my-agent")
+
+# After:
+from agent_framework_engram import EngramTools
+memory = EngramTools(bucket="my-agent")
+```
+
+The constructor signature and `.tools` property are unchanged.
 
 ## Self-hosted Engram
 
 ```python
-EngramSkill(bucket="x", base_url="https://engram.your-corp.internal")
+EngramTools(bucket="x", base_url="https://engram.your-corp.internal")
 ```
 
 ## License
