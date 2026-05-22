@@ -112,7 +112,7 @@ class EngramClient:
     async def query_memory(self, query: str, bucket: str) -> dict[str, Any]:
         """POST /v1/query"""
         return await self._request(
-            "POST", "/v1/query", json={"query": query, "bucket": bucket}
+            "POST", "/v1/query", json={"query": query, "buckets": [bucket]}
         )
 
     async def list_buckets(

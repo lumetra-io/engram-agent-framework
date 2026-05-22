@@ -41,7 +41,7 @@ async def test_query_uses_query_field_not_question() -> None:
         import json
         body = json.loads(req.content.decode())
         assert "query" in body and "question" not in body
-        assert body["bucket"] == "b"
+        assert body["buckets"] == ["b"]
         return httpx.Response(200, json={"success": True, "answer": "ok"})
 
     async with httpx.AsyncClient(transport=_mock_transport(handler)) as h:
